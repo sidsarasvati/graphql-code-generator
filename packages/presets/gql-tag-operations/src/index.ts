@@ -7,10 +7,14 @@ import * as typescriptPlugin from '@graphql-codegen/typescript';
 import * as gqlTagPlugin from '@graphql-codegen/gql-tag-operations';
 import { processSources } from './process-sources';
 
-export type GqlTagConfig = {};
+export type GqlTagConfig = {
+  /** Whether fragment types should be masked or not. */
+  maskFragments?: boolean;
+};
 
 export const preset: Types.OutputPreset<GqlTagConfig> = {
   buildGeneratesSection: options => {
+    const maskFragments = options?.presetConfig?.maskFragments ?? false;
     const sourcesWithOperations = processSources(options.documents);
     const sources = sourcesWithOperations.map(({ source }) => source);
 
@@ -36,13 +40,18 @@ export const preset: Types.OutputPreset<GqlTagConfig> = {
       { [`gen-dts`]: { sourcesWithOperations } },
     ];
 
+    const config = {
+      ...options.config,
+      inlineFragmentTypes: maskFragments ? 'mask' : options.config['inlineFragmentTypes'],
+    };
+
     return [
       {
         filename: `${options.baseOutputDir}/graphql.ts`,
         plugins,
         pluginMap,
         schema: options.schema,
-        config: options.config,
+        config,
         documents: sources,
       },
       {
@@ -50,7 +59,7 @@ export const preset: Types.OutputPreset<GqlTagConfig> = {
         plugins: genDtsPlugins,
         pluginMap,
         schema: options.schema,
-        config: options.config,
+        config,
         documents: sources,
       },
     ];

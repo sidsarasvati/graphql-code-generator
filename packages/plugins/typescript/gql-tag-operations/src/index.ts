@@ -21,13 +21,34 @@ export type DocumentType<TDocumentNode extends DocumentNode<any, any>> = TDocume
   : never;
 `;
 
+const maskingTypePartial = `
+export type FragmentType<TDocumentType extends DocumentNode<any, any>> = TDocumentType extends DocumentNode<
+  infer TType,
+  any
+>
+  ? TType extends { ' $fragmentName': infer TKey }
+    ? TKey extends string
+      ? { ' $fragmentRefs': { [key in TKey]: TType } }
+      : never
+    : never
+  : never;
+
+export const useFragment = <TType>(
+  _documentNode: DocumentNode<TType, any>,
+  fragmentType: FragmentType<DocumentNode<TType, any>>
+): TType => {
+  return fragmentType as any;
+};
+`;
+
 export const plugin: PluginFunction<{
+  inlineFragmentTypes?: string;
   sourcesWithOperations: Array<SourceWithOperations>;
-}> = (_, __, { sourcesWithOperations }) => {
+}> = (_, __, { sourcesWithOperations, inlineFragmentTypes }) => {
   if (!sourcesWithOperations) {
     return '';
   }
-  return [
+  const parts = [
     `import * as graphql from './graphql';\n`,
     `import { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/core';\n`,
     `\n`,
@@ -40,7 +61,13 @@ export const plugin: PluginFunction<{
     `  return (documents as any)[source] ?? {};\n`,
     `}\n`,
     documentTypePartial,
-  ].join(``);
+  ];
+
+  if (inlineFragmentTypes === 'mask') {
+    parts.push(maskingTypePartial);
+  }
+
+  return parts.join(``);
 };
 
 function getDocumentRegistryChunk(sourcesWithOperations: Array<SourceWithOperations> = []) {

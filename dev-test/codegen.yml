@@ -392,3 +392,9 @@ generates:
     schema: ./dev-test/gql-tag-operations/schema.graphql
     documents: './dev-test/gql-tag-operations/src/**/*.ts'
     preset: gql-tag-operations-preset
+  ./dev-test/gql-tag-operations-masking/gql:
+    schema: ./dev-test/gql-tag-operations-masking/schema.graphql
+    documents: './dev-test/gql-tag-operations-masking/src/**/*.tsx'
+    preset: gql-tag-operations-preset
+    presetConfig:
+      maskFragments: true
