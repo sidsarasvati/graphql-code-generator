@@ -21,7 +21,8 @@ schema: src/schema.json
 documents: 'src/**/*.graphql'
 generates:
   src/types.ts:
-    - typescript
+    plugins:
+      - typescript
   src/:
     preset: near-operation-file
     presetConfig:
